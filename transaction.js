@@ -86,7 +86,6 @@ module.exports = class Transaction {
    * @returns {boolean} True if the transaction is valid, false otherwise.
    */
   isValid(utxos) {
-
     //
     // **YOUR CODE HERE**
     //
@@ -97,6 +96,27 @@ module.exports = class Transaction {
     //
     // 1) Look up the list of UTXOs available for the transaction in the
     //      'utxos' argument.
+    let input_sum = 0;
+    let output_sum = 0;
+    for (let i =0 ; i< this.inputs.length; ++i){
+      let input = this.inputs[i];
+      let utxo = ((utxos[input.txID] || [])[input.outputIndex]) || [];
+      if (!utxo){
+        return false;
+      }
+      let valid = (utils.calcAddress(input.pubKey) === utxo.address);
+      valid = valid && (utils.verifySignature(input.pubKey, utxo, input.sig));
+      if(!valid){
+        return false;
+      }
+      input_sum += utxo['amount'];
+    }
+    for(let i = 0; i < this.outputs.length; ++i){
+      output_sum += this.outputs[i].amount;
+    }
+    return input_sum >= output_sum;
+
+
     // 2) From that list, find the matching utxo.  (If you can't find it,
     //      the transaction is invalid).
     // 3) Verify the public key hash in the previous output matches the

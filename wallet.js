@@ -96,14 +96,31 @@ module.exports = class Wallet {
     // the specified amount.  Create an array of inputs that
     // can unlock the UTXOs.
     //
+    let amount_left = amount;
+    let input_sum = 0;
+    let inputs = [];
+    let i =0;
+    while(amount_left > 0){
+        let coin = this.coins.shift();
+        input_sum += coin.output.amount;
+        amount_left -= coin.output.amount;
+        let input ={txID: coin.txID,
+                    outputIndex: coin.outputIndex,
+                    pubKey: this.addresses[coin.output.address].public,
+                    sig: utils.sign(this.addresses[coin.output.address].private, coin.output)
+        };
+        inputs.push(input);
+        ++i;
+    }
+    amount_left = Math.abs(amount_left);
     // Return an object containing the array of inputs and the
     // amount of change needed.
 
 
     // Currently returning default values.
     return {
-      inputs: [],
-      changeAmt: 0,
+      inputs: inputs,
+      changeAmt: amount_left,
     };
 
   }
@@ -131,4 +148,4 @@ module.exports = class Wallet {
   hasKey(address) {
     return !!this.addresses[address];
   }
-}
+};
